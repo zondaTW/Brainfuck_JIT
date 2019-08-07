@@ -1,62 +1,98 @@
 package main
 
 import (
+	"bufio"
+	"container/list"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
-func great() {
-	fmt.Printf("++ptr;")
+func great(buf []byte, ptr *int) {
+	*ptr++
 }
 
-func less() {
-	fmt.Printf("--ptr;")
+func less(buf []byte, ptr *int) {
+	*ptr--
 }
 
-func plus() {
-	fmt.Printf("++*ptr;")
+func plus(buf []byte, ptr *int) {
+	buf[*ptr]++
 }
 
-func hyphen() {
-	fmt.Printf("--*ptr;")
+func hyphen(buf []byte, ptr *int) {
+	buf[*ptr]--
 }
 
-func dot() {
-	fmt.Printf("putchar(*ptr);")
+func dot(buf []byte, ptr *int) {
+	fmt.Printf("%c", buf[*ptr])
 }
 
-func comma() {
-	fmt.Printf("*ptr = getchar();")
+func comma(buf []byte, ptr *int) {
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	buf[*ptr] = []byte(input)[0]
 }
 
-func open_bracket() {
-	fmt.Printf("while (*ptr) {")
-}
+var filename string
 
-func close_bracket() {
-	fmt.Printf("}")
+func init() {
+	flag.StringVar(&filename, "i", "", "input brainfuck file")
 }
 
 func main() {
-	Brainfuck := map[string]func(){
+	flag.Parse()
+	if filename == "" {
+		fmt.Println("Filename empty")
+		return
+	}
+
+	Brainfuck := map[string]func(buf []byte, ptr *int){
 		">": great,
 		"<": less,
 		"+": plus,
 		"-": hyphen,
 		".": dot,
 		",": comma,
-		"[": open_bracket,
-		"]": close_bracket,
 	}
 
-	content, err := ioutil.ReadFile("hello_world.bf")
+	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for _, v := range content {
-		if brainfuck, ok := Brainfuck[string(v)]; ok {
-			brainfuck()
+	buf := make([]byte, 256)
+	ptr := 0
+	whileEipList := list.New()
+
+	var value string = ""
+	for idx, tempIdx := 0, 0; ; {
+		if idx >= len(content) {
+			break
 		}
+
+		value = string(content[idx])
+		if brainfuck, ok := Brainfuck[value]; ok {
+			brainfuck(buf, &ptr)
+		}
+
+		switch value {
+		case "[":
+			if buf[ptr] != 0 {
+				whileEipList.PushBack(idx)
+			} else {
+				idx = whileEipList.Back().Value.(int)
+				whileEipList.Remove(whileEipList.Back())
+			}
+		case "]":
+			tempIdx = idx
+			idx = whileEipList.Back().Value.(int)
+			whileEipList.Remove(whileEipList.Back())
+			whileEipList.PushBack(tempIdx)
+			continue
+		}
+
+		idx++
 	}
 }

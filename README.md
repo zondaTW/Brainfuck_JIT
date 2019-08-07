@@ -1,5 +1,12 @@
 # Brainfuck JIT
 
+## Use
+
+```text
+$ go run main.go -i hello_world.bf
+Hello World!
+```
+
 ## parser
 
 [Brainfuck wiki](https://zh.wikipedia.org/wiki/Brainfuck)  
