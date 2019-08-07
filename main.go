@@ -36,6 +36,22 @@ func comma(buf []byte, ptr *int) {
 	buf[*ptr] = []byte(input)[0]
 }
 
+func findNextCloseBracketIdx(content []byte, currentIdx int) int {
+	var openBracketNum int = 0
+	for idx, value := range content[currentIdx+1:] {
+		if string(value) == "[" {
+			openBracketNum++
+		} else if string(value) == "]" {
+			if openBracketNum != 0 {
+				openBracketNum--
+			} else {
+				return idx + currentIdx + 1
+			}
+		}
+	}
+	return -1
+}
+
 var filename string
 
 func init() {
@@ -82,14 +98,15 @@ func main() {
 			if buf[ptr] != 0 {
 				whileEipList.PushBack(idx)
 			} else {
-				idx = whileEipList.Back().Value.(int)
-				whileEipList.Remove(whileEipList.Back())
+				tempIdx = findNextCloseBracketIdx(content, idx)
+				if tempIdx == -1 {
+					break
+				}
+				idx = tempIdx
 			}
 		case "]":
-			tempIdx = idx
 			idx = whileEipList.Back().Value.(int)
 			whileEipList.Remove(whileEipList.Back())
-			whileEipList.PushBack(tempIdx)
 			continue
 		}
 
