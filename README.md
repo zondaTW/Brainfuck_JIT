@@ -1,4 +1,4 @@
-# Brainfuck JIT
+# Brainfuck interpreter
 
 ## Use
 
